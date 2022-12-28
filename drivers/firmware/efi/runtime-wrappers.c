@@ -236,6 +236,17 @@ static void efi_call_rts(struct work_struct *work)
 				       *(unsigned long *)arg2, (u64 *)arg3,
 				       (int *)arg4);
 		break;
+	case EFI_GET_FLASH_SIZE:
+		status = efi_call_virt(get_flash_size, (u64 *)arg1);
+		break;
+	case EFI_READ_FLASH:
+		status = efi_call_virt(read_flash,
+				       *(u64 *)arg1, (u64 *)arg2, arg3);
+		break;
+	case EFI_WRITE_FLASH:
+		status = efi_call_virt(write_flash,
+				       *(u64 *)arg1, (u64 *)arg2, arg3);
+		break;
 	default:
 		/*
 		 * Ideally, we should never reach here because a caller of this
@@ -459,6 +470,51 @@ static efi_status_t virt_efi_query_capsule_caps(efi_capsule_header_t **capsules,
 	return status;
 }
 
+static efi_status_t virt_efi_get_flash_size(u64 *flash_size)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+	status = efi_queue_work(EFI_GET_FLASH_SIZE, flash_size,
+				NULL, NULL, NULL, NULL);
+	up(&efi_runtime_lock);
+	return status;
+}
+
+static efi_status_t virt_efi_read_flash(u64 offset, u64 *data_size, void *data)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+	status = efi_queue_work(EFI_READ_FLASH, &offset, data_size, data,
+				NULL, NULL);
+	up(&efi_runtime_lock);
+	return status;
+}
+
+static efi_status_t virt_efi_write_flash(u64 offset, u64 *data_size, void *data)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+	status = efi_queue_work(EFI_WRITE_FLASH, &offset, data_size, data,
+				NULL, NULL);
+	up(&efi_runtime_lock);
+	return status;
+}
+
 void efi_native_runtime_setup(void)
 {
 	efi.get_time = virt_efi_get_time;
@@ -475,4 +531,7 @@ void efi_native_runtime_setup(void)
 	efi.query_variable_info_nonblocking = virt_efi_query_variable_info_nonblocking;
 	efi.update_capsule = virt_efi_update_capsule;
 	efi.query_capsule_caps = virt_efi_query_capsule_caps;
+	efi.get_flash_size = virt_efi_get_flash_size;
+	efi.read_flash = virt_efi_read_flash;
+	efi.write_flash = virt_efi_write_flash;
 }
