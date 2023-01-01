@@ -236,6 +236,9 @@ static void efi_call_rts(struct work_struct *work)
 				       *(unsigned long *)arg2, (u64 *)arg3,
 				       (int *)arg4);
 		break;
+	case EFI_GET_UPTIME_SECONDS:
+		status = efi_call_virt(get_uptime_seconds, (unsigned long *)arg1);
+		break;
 	case EFI_GET_FLASH_SIZE:
 		status = efi_call_virt(get_flash_size, (u64 *)arg1);
 		break;
@@ -470,6 +473,21 @@ static efi_status_t virt_efi_query_capsule_caps(efi_capsule_header_t **capsules,
 	return status;
 }
 
+static efi_status_t virt_efi_get_uptime_seconds(unsigned long *seconds)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+	status = efi_queue_work(EFI_GET_UPTIME_SECONDS, seconds,
+				NULL, NULL, NULL, NULL);
+	up(&efi_runtime_lock);
+	return status;
+}
+
 static efi_status_t virt_efi_get_flash_size(u64 *flash_size)
 {
 	efi_status_t status;
@@ -531,6 +549,7 @@ void efi_native_runtime_setup(void)
 	efi.query_variable_info_nonblocking = virt_efi_query_variable_info_nonblocking;
 	efi.update_capsule = virt_efi_update_capsule;
 	efi.query_capsule_caps = virt_efi_query_capsule_caps;
+	efi.get_uptime_seconds = virt_efi_get_uptime_seconds;
 	efi.get_flash_size = virt_efi_get_flash_size;
 	efi.read_flash = virt_efi_read_flash;
 	efi.write_flash = virt_efi_write_flash;

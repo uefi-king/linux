@@ -36,6 +36,7 @@ static ssize_t flash_write(struct file *filp, struct kobject *kobj,
 
 static void flash_sysfs_exit(void)
 {
+	printk(KERN_INFO "Flash sysfs deinit\n");
 	sysfs_remove_bin_file(efi_kobj, flash);
 }
 
@@ -75,5 +76,6 @@ static int flash_sysfs_init(void)
 	return 0;
 }
 
+MODULE_LICENSE("GPL");
 module_init(flash_sysfs_init);
 module_exit(flash_sysfs_exit);

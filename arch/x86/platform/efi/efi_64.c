@@ -805,6 +805,12 @@ efi_thunk_query_capsule_caps(efi_capsule_header_t **capsules,
 }
 
 static efi_status_t
+efi_thunk_get_uptime_seconds(unsigned long *seconds)
+{
+	BUG();
+}
+
+static efi_status_t
 efi_thunk_get_flash_size(u64 *flash_size)
 {
 	efi_status_t status;
@@ -893,6 +899,7 @@ void __init efi_thunk_runtime_setup(void)
 	efi.query_variable_info_nonblocking = efi_thunk_query_variable_info_nonblocking;
 	efi.update_capsule = efi_thunk_update_capsule;
 	efi.query_capsule_caps = efi_thunk_query_capsule_caps;
+	efi.get_uptime_seconds = efi_thunk_get_uptime_seconds;
 	efi.get_flash_size = efi_thunk_get_flash_size;
 	efi.read_flash = efi_thunk_read_flash;
 	efi.write_flash = efi_thunk_write_flash;

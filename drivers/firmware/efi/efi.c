@@ -113,6 +113,7 @@ static int __init parse_efi_cmdline(char *str)
 early_param("efi", parse_efi_cmdline);
 
 struct kobject *efi_kobj;
+EXPORT_SYMBOL(efi_kobj);
 
 /*
  * Let's not leave out systab information that snuck into

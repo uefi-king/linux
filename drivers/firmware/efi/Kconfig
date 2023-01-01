@@ -2,6 +2,16 @@
 menu "EFI (Extensible Firmware Interface) Support"
 	depends on EFI
 
+config EFI_FLASH
+	tristate "EFI runtime service for read/write flash"
+	depends on EFI
+	default y
+
+config EFI_UPTIME
+	tristate "EFI runtime service to get uptime"
+	depends on EFI
+	default y
+
 config EFI_ESRT
 	bool
 	depends on EFI && !IA64
