@@ -826,19 +826,19 @@ efi_thunk_query_capsule_caps(efi_capsule_header_t **capsules,
 }
 
 static efi_status_t
-efi_thunk_get_uptime_secs(unsigned long *secs)
+efi_thunk_get_uptime(unsigned long *ticks)
 {
 	efi_status_t status;
-	u32 phys_secs;
+	u32 phys_ticks;
 	unsigned long flags;
 
 	spin_lock_irqsave(&efi_runtime_lock, flags);
 
-	phys_secs = virt_to_phys_or_null(secs);
-	if (!phys_secs) {
+	phys_ticks = virt_to_phys_or_null(ticks);
+	if (!phys_ticks) {
 		return EFI_INVALID_PARAMETER;
 	} else {
-		status = efi_thunk(get_uptime, phys_secs);
+		status = efi_thunk(get_uptime, phys_ticks);
 	}
 
 	spin_unlock_irqrestore(&efi_runtime_lock, flags);
@@ -865,7 +865,7 @@ void __init efi_thunk_runtime_setup(void)
 	efi.query_variable_info_nonblocking = efi_thunk_query_variable_info_nonblocking;
 	efi.update_capsule = efi_thunk_update_capsule;
 	efi.query_capsule_caps = efi_thunk_query_capsule_caps;
-	efi.get_uptime = efi_thunk_get_uptime_secs;
+	efi.get_uptime = efi_thunk_get_uptime;
 }
 
 efi_status_t __init __no_sanitize_address
