@@ -277,6 +277,7 @@ typedef struct {
 	u32 update_capsule;
 	u32 query_capsule_caps;
 	u32 query_variable_info;
+	u32 get_uptime;
 } efi_runtime_services_32_t;
 
 typedef efi_status_t efi_get_time_t (efi_time_t *tm, efi_time_cap_t *tc);
@@ -312,6 +313,7 @@ typedef efi_status_t efi_query_capsule_caps_t(efi_capsule_header_t **capsules,
 typedef efi_status_t efi_query_variable_store_t(u32 attributes,
 						unsigned long size,
 						bool nonblocking);
+typedef efi_status_t efi_get_uptime_t(unsigned long *ticks);
 
 typedef union {
 	struct {
@@ -330,6 +332,7 @@ typedef union {
 		efi_update_capsule_t __efiapi		*update_capsule;
 		efi_query_capsule_caps_t __efiapi	*query_capsule_caps;
 		efi_query_variable_info_t __efiapi	*query_variable_info;
+		efi_get_uptime_t __efiapi		*get_uptime;
 	};
 	efi_runtime_services_32_t mixed_mode;
 } efi_runtime_services_t;
@@ -666,6 +669,7 @@ extern struct efi {
 	efi_query_capsule_caps_t	*query_capsule_caps;
 	efi_get_next_high_mono_count_t	*get_next_high_mono_count;
 	efi_reset_system_t		*reset_system;
+	efi_get_uptime_t		*get_uptime;
 
 	struct efi_memory_map		memmap;
 	unsigned long			flags;
@@ -1253,6 +1257,7 @@ enum efi_rts_ids {
 	EFI_UPDATE_CAPSULE,
 	EFI_QUERY_CAPSULE_CAPS,
 	EFI_ACPI_PRM_HANDLER,
+	EFI_GET_UPTIME,
 };
 
 union efi_rts_args;

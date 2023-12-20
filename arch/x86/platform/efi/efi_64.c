@@ -825,6 +825,27 @@ efi_thunk_query_capsule_caps(efi_capsule_header_t **capsules,
 	return EFI_UNSUPPORTED;
 }
 
+static efi_status_t
+efi_thunk_get_uptime_secs(unsigned long *secs)
+{
+	efi_status_t status;
+	u32 phys_secs;
+	unsigned long flags;
+
+	spin_lock_irqsave(&efi_runtime_lock, flags);
+
+	phys_secs = virt_to_phys_or_null(secs);
+	if (!phys_secs) {
+		return EFI_INVALID_PARAMETER;
+	} else {
+		status = efi_thunk(get_uptime, phys_secs);
+	}
+
+	spin_unlock_irqrestore(&efi_runtime_lock, flags);
+
+	return status;
+}
+
 void __init efi_thunk_runtime_setup(void)
 {
 	if (!IS_ENABLED(CONFIG_EFI_MIXED))
@@ -844,6 +865,7 @@ void __init efi_thunk_runtime_setup(void)
 	efi.query_variable_info_nonblocking = efi_thunk_query_variable_info_nonblocking;
 	efi.update_capsule = efi_thunk_update_capsule;
 	efi.query_capsule_caps = efi_thunk_query_capsule_caps;
+	efi.get_uptime = efi_thunk_get_uptime_secs;
 }
 
 efi_status_t __init __no_sanitize_address

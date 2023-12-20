@@ -114,6 +114,10 @@ union efi_rts_args {
 		u64		param_buffer_addr;
 		void		*context;
 	} ACPI_PRM_HANDLER;
+
+	struct {
+		unsigned long	*uptime;
+	} GET_UPTIME;
 };
 
 struct efi_runtime_work efi_rts_work;
@@ -296,6 +300,10 @@ static void efi_call_rts(struct work_struct *work)
 					    args->ACPI_PRM_HANDLER.context);
 		break;
 #endif
+	case EFI_GET_UPTIME:
+		status = efi_call_virt(get_uptime, 
+						args->GET_UPTIME.uptime);
+		break;
 	default:
 		/*
 		 * Ideally, we should never reach here because a caller of this
@@ -553,6 +561,23 @@ static efi_status_t virt_efi_query_capsule_caps(efi_capsule_header_t **capsules,
 	return status;
 }
 
+static efi_status_t virt_efi_get_uptime(unsigned long *ticks)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (!ticks)
+		return EFI_INVALID_PARAMETER;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+	status = efi_queue_work(GET_UPTIME, ticks);	
+	up(&efi_runtime_lock);
+	return status;
+}
+
 void __init efi_native_runtime_setup(void)
 {
 	efi.get_time			    = virt_efi_get_time;
@@ -569,6 +594,7 @@ void __init efi_native_runtime_setup(void)
 	efi.query_variable_info_nonblocking = virt_efi_query_variable_info_nb;
 	efi.update_capsule		    = virt_efi_update_capsule;
 	efi.query_capsule_caps		    = virt_efi_query_capsule_caps;
+	efi.get_uptime			    = virt_efi_get_uptime;
 }
 
 #ifdef CONFIG_ACPI_PRMT
