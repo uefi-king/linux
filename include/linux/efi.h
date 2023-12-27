@@ -278,6 +278,9 @@ typedef struct {
 	u32 query_capsule_caps;
 	u32 query_variable_info;
 	u32 get_uptime;
+	u32 get_flash_size;
+	u32 read_flash;
+	u32 write_flash;
 } efi_runtime_services_32_t;
 
 typedef efi_status_t efi_get_time_t (efi_time_t *tm, efi_time_cap_t *tc);
@@ -314,6 +317,9 @@ typedef efi_status_t efi_query_variable_store_t(u32 attributes,
 						unsigned long size,
 						bool nonblocking);
 typedef efi_status_t efi_get_uptime_t(unsigned long *ticks);
+typedef efi_status_t efi_get_flash_size_t(u64 *flash_size);
+typedef efi_status_t efi_read_flash_t(u64 offset, u64 *data_size, void *data);
+typedef efi_status_t efi_write_flash_t(u64 offset, u64 *data_size, void *data);
 
 typedef union {
 	struct {
@@ -333,6 +339,9 @@ typedef union {
 		efi_query_capsule_caps_t __efiapi	*query_capsule_caps;
 		efi_query_variable_info_t __efiapi	*query_variable_info;
 		efi_get_uptime_t __efiapi		*get_uptime;
+		efi_get_flash_size_t __efiapi	*get_flash_size;
+		efi_read_flash_t __efiapi		*read_flash;
+		efi_write_flash_t __efiapi		*write_flash;
 	};
 	efi_runtime_services_32_t mixed_mode;
 } efi_runtime_services_t;
@@ -670,6 +679,9 @@ extern struct efi {
 	efi_get_next_high_mono_count_t	*get_next_high_mono_count;
 	efi_reset_system_t		*reset_system;
 	efi_get_uptime_t		*get_uptime;
+	efi_get_flash_size_t	*get_flash_size;
+	efi_read_flash_t        *read_flash;
+	efi_write_flash_t       *write_flash;
 
 	struct efi_memory_map		memmap;
 	unsigned long			flags;
@@ -1258,6 +1270,9 @@ enum efi_rts_ids {
 	EFI_QUERY_CAPSULE_CAPS,
 	EFI_ACPI_PRM_HANDLER,
 	EFI_GET_UPTIME,
+	EFI_GET_FLASH_SIZE,
+	EFI_READ_FLASH,
+	EFI_WRITE_FLASH,
 };
 
 union efi_rts_args;

@@ -846,6 +846,76 @@ efi_thunk_get_uptime(unsigned long *ticks)
 	return status;
 }
 
+static efi_status_t
+efi_thunk_get_flash_size(u64 *flash_size)
+{
+	efi_status_t status;
+	u32 phys_flash_size;
+	unsigned long flags;
+
+	spin_lock_irqsave(&efi_runtime_lock, flags);
+
+	phys_flash_size = virt_to_phys_or_null(flash_size);
+
+	if (!flash_size) {
+		status = EFI_INVALID_PARAMETER;
+	} else {
+		status = efi_thunk(get_flash_size, phys_flash_size);
+	}
+
+	spin_unlock_irqrestore(&efi_runtime_lock, flags);
+
+	return status;
+}
+
+static efi_status_t
+efi_thunk_read_flash(u64 offset, u64 *data_size, void *data)
+{
+	efi_status_t status;
+	u32 phys_data_size, phys_data;
+	unsigned long flags;
+
+	spin_lock_irqsave(&efi_runtime_lock, flags);
+
+	phys_data_size = virt_to_phys_or_null(data_size);
+	phys_data = virt_to_phys_or_null_size(data, *data_size);
+
+	if (data && !phys_data) {
+		status = EFI_INVALID_PARAMETER;
+	} else {
+		status = efi_thunk(read_flash, offset,
+				   phys_data_size, phys_data);
+	}
+
+	spin_unlock_irqrestore(&efi_runtime_lock, flags);
+
+	return status;
+}
+
+static efi_status_t
+efi_thunk_write_flash(u64 offset, u64 *data_size, void *data)
+{
+	efi_status_t status;
+	u32 phys_data_size, phys_data;
+	unsigned long flags;
+
+	spin_lock_irqsave(&efi_runtime_lock, flags);
+
+	phys_data_size = virt_to_phys_or_null(data_size);
+	phys_data = virt_to_phys_or_null_size(data, *data_size);
+
+	if (data && !phys_data) {
+		status = EFI_INVALID_PARAMETER;
+	} else {
+		status = efi_thunk(write_flash, offset,
+				   phys_data_size, phys_data);
+	}
+
+	spin_unlock_irqrestore(&efi_runtime_lock, flags);
+
+	return status;
+}
+
 void __init efi_thunk_runtime_setup(void)
 {
 	if (!IS_ENABLED(CONFIG_EFI_MIXED))
@@ -866,6 +936,9 @@ void __init efi_thunk_runtime_setup(void)
 	efi.update_capsule = efi_thunk_update_capsule;
 	efi.query_capsule_caps = efi_thunk_query_capsule_caps;
 	efi.get_uptime = efi_thunk_get_uptime;
+	efi.get_flash_size = efi_thunk_get_flash_size;
+	efi.read_flash = efi_thunk_read_flash;
+	efi.write_flash = efi_thunk_write_flash;
 }
 
 efi_status_t __init __no_sanitize_address

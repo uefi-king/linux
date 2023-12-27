@@ -118,6 +118,22 @@ union efi_rts_args {
 	struct {
 		unsigned long	*uptime;
 	} GET_UPTIME;
+
+	struct {
+		u64		*flash_size;
+	} GET_FLASH_SIZE;
+
+	struct {
+		u64		offset;
+		u64		*data_size;
+		void	*data;
+	} READ_FLASH;
+
+	struct {
+		u64		offset;
+		u64		*data_size;
+		void	*data;
+	} WRITE_FLASH;
 };
 
 struct efi_runtime_work efi_rts_work;
@@ -578,6 +594,51 @@ static efi_status_t virt_efi_get_uptime(unsigned long *ticks)
 	return status;
 }
 
+static efi_status_t virt_efi_get_flash_size(u64 *flash_size)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+	
+	status = efi_queue_work(GET_FLASH_SIZE, flash_size);
+	up(&efi_runtime_lock);
+	return status;
+}
+
+static efi_status_t virt_efi_read_flash(u64 offset, u64 *data_size, void *data)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+
+	status = efi_queue_work(READ_FLASH, offset, data_size, data);
+	up(&efi_runtime_lock);
+	return status;
+}
+
+static efi_status_t virt_efi_write_flash(u64 offset, u64 *data_size, void *data)
+{
+	efi_status_t status;
+
+	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+		return EFI_UNSUPPORTED;
+
+	if (down_interruptible(&efi_runtime_lock))
+		return EFI_ABORTED;
+
+	status = efi_queue_work(WRITE_FLASH, offset, data_size, data);
+	up(&efi_runtime_lock);
+	return status;
+}
+
 void __init efi_native_runtime_setup(void)
 {
 	efi.get_time			    = virt_efi_get_time;
@@ -595,6 +656,9 @@ void __init efi_native_runtime_setup(void)
 	efi.update_capsule		    = virt_efi_update_capsule;
 	efi.query_capsule_caps		    = virt_efi_query_capsule_caps;
 	efi.get_uptime			    = virt_efi_get_uptime;
+	efi.get_flash_size			= virt_efi_get_flash_size;
+	efi.read_flash				= virt_efi_read_flash;
+	efi.write_flash				= virt_efi_write_flash;
 }
 
 #ifdef CONFIG_ACPI_PRMT
