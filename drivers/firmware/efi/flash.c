@@ -49,12 +49,14 @@ static int flash_sysfs_init(void)
 
 	status = efi.get_flash_size(&flash_size);
 	if (status != EFI_SUCCESS) {
+		printk(KERN_ERR "get flash size fail, status: %lu\n", status);
 		return efi_status_to_err(status);
 	}
 	printk(KERN_INFO "Flash size: %llu\n", flash_size);
 
 	flash = kzalloc(sizeof *flash, GFP_KERNEL);
 	if (flash == NULL) {
+		printk(KERN_ERR "alloc flash fail\n");
 		return -ENOMEM;
 	}
 
@@ -68,6 +70,7 @@ static int flash_sysfs_init(void)
 
 	error = sysfs_create_bin_file(efi_kobj, flash);
 	if (error) {
+		printk(KERN_ERR "create bin file fail\n");
 		kfree(flash);
 		return error;
 	}

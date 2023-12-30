@@ -320,6 +320,22 @@ static void efi_call_rts(struct work_struct *work)
 		status = efi_call_virt(get_uptime, 
 						args->GET_UPTIME.uptime);
 		break;
+	case EFI_GET_FLASH_SIZE:
+		status = efi_call_virt(get_flash_size,
+						args->GET_FLASH_SIZE.flash_size);
+		break;
+	case EFI_READ_FLASH:
+		status = efi_call_virt(read_flash,
+						args->WRITE_FLASH.offset,
+						args->READ_FLASH.data_size,
+						args->READ_FLASH.data);
+		break;
+	case EFI_WRITE_FLASH:
+		status = efi_call_virt(write_flash,
+						args->WRITE_FLASH.offset,
+						args->WRITE_FLASH.data_size,
+						args->WRITE_FLASH.data);
+		break;
 	default:
 		/*
 		 * Ideally, we should never reach here because a caller of this
