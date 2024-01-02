@@ -2,11 +2,6 @@
 menu "EFI (Extensible Firmware Interface) Support"
 	depends on EFI
 
-config EFI_UPTIME
-	bool "EFI runtime service for get uptime"
-	depends on EFI
-	default y
-
 config EFI_FLASH
 	bool "EFI runtime service for read/write flash"
 	depends on EFI

@@ -826,27 +826,6 @@ efi_thunk_query_capsule_caps(efi_capsule_header_t **capsules,
 }
 
 static efi_status_t
-efi_thunk_get_uptime(unsigned long *ticks)
-{
-	efi_status_t status;
-	u32 phys_ticks;
-	unsigned long flags;
-
-	spin_lock_irqsave(&efi_runtime_lock, flags);
-
-	phys_ticks = virt_to_phys_or_null(ticks);
-	if (!phys_ticks) {
-		return EFI_INVALID_PARAMETER;
-	} else {
-		status = efi_thunk(get_uptime, phys_ticks);
-	}
-
-	spin_unlock_irqrestore(&efi_runtime_lock, flags);
-
-	return status;
-}
-
-static efi_status_t
 efi_thunk_get_flash_size(efi_bool_t encrypted, u64 *flash_size)
 {
 	efi_status_t status;
@@ -935,7 +914,6 @@ void __init efi_thunk_runtime_setup(void)
 	efi.query_variable_info_nonblocking = efi_thunk_query_variable_info_nonblocking;
 	efi.update_capsule = efi_thunk_update_capsule;
 	efi.query_capsule_caps = efi_thunk_query_capsule_caps;
-	efi.get_uptime = efi_thunk_get_uptime;
 	efi.get_flash_size = efi_thunk_get_flash_size;
 	efi.read_flash = efi_thunk_read_flash;
 	efi.write_flash = efi_thunk_write_flash;
