@@ -847,7 +847,7 @@ efi_thunk_get_uptime(unsigned long *ticks)
 }
 
 static efi_status_t
-efi_thunk_get_flash_size(u64 *flash_size)
+efi_thunk_get_flash_size(efi_bool_t encrypted, u64 *flash_size)
 {
 	efi_status_t status;
 	u32 phys_flash_size;
@@ -860,7 +860,7 @@ efi_thunk_get_flash_size(u64 *flash_size)
 	if (!flash_size) {
 		status = EFI_INVALID_PARAMETER;
 	} else {
-		status = efi_thunk(get_flash_size, phys_flash_size);
+		status = efi_thunk(get_flash_size, encrypted, phys_flash_size);
 	}
 
 	spin_unlock_irqrestore(&efi_runtime_lock, flags);
@@ -869,7 +869,7 @@ efi_thunk_get_flash_size(u64 *flash_size)
 }
 
 static efi_status_t
-efi_thunk_read_flash(u64 offset, u64 *data_size, void *data)
+efi_thunk_read_flash(efi_bool_t encrypted, u64 offset, u64 *data_size, void *data)
 {
 	efi_status_t status;
 	u32 phys_data_size, phys_data;
@@ -883,7 +883,7 @@ efi_thunk_read_flash(u64 offset, u64 *data_size, void *data)
 	if (data && !phys_data) {
 		status = EFI_INVALID_PARAMETER;
 	} else {
-		status = efi_thunk(read_flash, offset,
+		status = efi_thunk(read_flash, encrypted, offset,
 				   phys_data_size, phys_data);
 	}
 
@@ -893,7 +893,7 @@ efi_thunk_read_flash(u64 offset, u64 *data_size, void *data)
 }
 
 static efi_status_t
-efi_thunk_write_flash(u64 offset, u64 *data_size, void *data)
+efi_thunk_write_flash(efi_bool_t encrypted, u64 offset, u64 *data_size, void *data)
 {
 	efi_status_t status;
 	u32 phys_data_size, phys_data;
@@ -907,7 +907,7 @@ efi_thunk_write_flash(u64 offset, u64 *data_size, void *data)
 	if (data && !phys_data) {
 		status = EFI_INVALID_PARAMETER;
 	} else {
-		status = efi_thunk(write_flash, offset,
+		status = efi_thunk(write_flash, encrypted, offset,
 				   phys_data_size, phys_data);
 	}
 

@@ -317,9 +317,9 @@ typedef efi_status_t efi_query_variable_store_t(u32 attributes,
 						unsigned long size,
 						bool nonblocking);
 typedef efi_status_t efi_get_uptime_t(unsigned long *ticks);
-typedef efi_status_t efi_get_flash_size_t(u64 *flash_size);
-typedef efi_status_t efi_read_flash_t(u64 offset, u64 *data_size, void *data);
-typedef efi_status_t efi_write_flash_t(u64 offset, u64 *data_size, void *data);
+typedef efi_status_t efi_get_flash_size_t(efi_bool_t encrypted, u64 *flash_size);
+typedef efi_status_t efi_read_flash_t(efi_bool_t encrypted, u64 offset, u64 *data_size, void *data);
+typedef efi_status_t efi_write_flash_t(efi_bool_t encrypted, u64 offset, u64 *data_size, void *data);
 
 typedef union {
 	struct {

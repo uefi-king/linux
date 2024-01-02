@@ -120,16 +120,19 @@ union efi_rts_args {
 	} GET_UPTIME;
 
 	struct {
+		efi_bool_t    encrypted;
 		u64		*flash_size;
 	} GET_FLASH_SIZE;
 
 	struct {
+		efi_bool_t    encrypted;
 		u64		offset;
 		u64		*data_size;
 		void	*data;
 	} READ_FLASH;
 
 	struct {
+		efi_bool_t    encrypted;
 		u64		offset;
 		u64		*data_size;
 		void	*data;
@@ -322,16 +325,19 @@ static void efi_call_rts(struct work_struct *work)
 		break;
 	case EFI_GET_FLASH_SIZE:
 		status = efi_call_virt(get_flash_size,
+						args->GET_FLASH_SIZE.encrypted,
 						args->GET_FLASH_SIZE.flash_size);
 		break;
 	case EFI_READ_FLASH:
 		status = efi_call_virt(read_flash,
+						args->READ_FLASH.encrypted,
 						args->WRITE_FLASH.offset,
 						args->READ_FLASH.data_size,
 						args->READ_FLASH.data);
 		break;
 	case EFI_WRITE_FLASH:
 		status = efi_call_virt(write_flash,
+						args->WRITE_FLASH.encrypted,
 						args->WRITE_FLASH.offset,
 						args->WRITE_FLASH.data_size,
 						args->WRITE_FLASH.data);
@@ -610,7 +616,7 @@ static efi_status_t virt_efi_get_uptime(unsigned long *ticks)
 	return status;
 }
 
-static efi_status_t virt_efi_get_flash_size(u64 *flash_size)
+static efi_status_t virt_efi_get_flash_size(efi_bool_t encrypted, u64 *flash_size)
 {
 	efi_status_t status;
 
@@ -620,12 +626,12 @@ static efi_status_t virt_efi_get_flash_size(u64 *flash_size)
 	if (down_interruptible(&efi_runtime_lock))
 		return EFI_ABORTED;
 	
-	status = efi_queue_work(GET_FLASH_SIZE, flash_size);
+	status = efi_queue_work(GET_FLASH_SIZE, encrypted, flash_size);
 	up(&efi_runtime_lock);
 	return status;
 }
 
-static efi_status_t virt_efi_read_flash(u64 offset, u64 *data_size, void *data)
+static efi_status_t virt_efi_read_flash(efi_bool_t encrypted, u64 offset, u64 *data_size, void *data)
 {
 	efi_status_t status;
 
@@ -635,12 +641,12 @@ static efi_status_t virt_efi_read_flash(u64 offset, u64 *data_size, void *data)
 	if (down_interruptible(&efi_runtime_lock))
 		return EFI_ABORTED;
 
-	status = efi_queue_work(READ_FLASH, offset, data_size, data);
+	status = efi_queue_work(READ_FLASH, encrypted, offset, data_size, data);
 	up(&efi_runtime_lock);
 	return status;
 }
 
-static efi_status_t virt_efi_write_flash(u64 offset, u64 *data_size, void *data)
+static efi_status_t virt_efi_write_flash(efi_bool_t encrypted, u64 offset, u64 *data_size, void *data)
 {
 	efi_status_t status;
 
@@ -650,7 +656,7 @@ static efi_status_t virt_efi_write_flash(u64 offset, u64 *data_size, void *data)
 	if (down_interruptible(&efi_runtime_lock))
 		return EFI_ABORTED;
 
-	status = efi_queue_work(WRITE_FLASH, offset, data_size, data);
+	status = efi_queue_work(WRITE_FLASH, encrypted, offset, data_size, data);
 	up(&efi_runtime_lock);
 	return status;
 }
